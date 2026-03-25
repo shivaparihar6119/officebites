@@ -37,6 +37,18 @@ public class EmployeeController {
             return ResponseEntity.status(403).body("Access denied");
         }
         User employee = empOpt.get();
+        // Logical Validation
+        if (healthGoal.getGoalType() == GoalType.WEIGHT_LOSS && healthGoal.getTargetWeight() != null && healthGoal.getCurrentWeight() != null) {
+            if (healthGoal.getTargetWeight() >= healthGoal.getCurrentWeight()) {
+                return ResponseEntity.badRequest().body("For weight loss, target weight must be less than current weight");
+            }
+        }
+        if (healthGoal.getGoalType() == GoalType.MUSCLE_GAIN && healthGoal.getTargetWeight() != null && healthGoal.getCurrentWeight() != null) {
+            if (healthGoal.getTargetWeight() <= healthGoal.getCurrentWeight()) {
+                return ResponseEntity.badRequest().body("For muscle gain, target weight must be greater than current weight");
+            }
+        }
+
         // Update if exists
         Optional<HealthGoal> existing = healthGoalRepository.findByEmployeeId(employee.getId());
         HealthGoal goal = existing.orElse(new HealthGoal());

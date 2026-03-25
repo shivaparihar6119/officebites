@@ -13,6 +13,7 @@ public class RegisterRequest {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
+    @Pattern(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$", message = "Email must be a valid format (e.g., example@domain.com)")
     private String email;
 
     @NotBlank(message = "Username is required")

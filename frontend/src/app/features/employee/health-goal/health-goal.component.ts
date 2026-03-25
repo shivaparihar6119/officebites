@@ -77,6 +77,8 @@ import { GoalType } from '../../../core/models/models';
               <mat-label>Target Weight (kg) — optional</mat-label>
               <input matInput type="number" step="0.1" formControlName="targetWeight">
               <mat-error *ngIf="goalForm.get('targetWeight')?.hasError('min') || goalForm.get('targetWeight')?.hasError('max')">20 - 300 kg</mat-error>
+              <mat-error *ngIf="goalForm.get('targetWeight')?.hasError('targetWeightTooHigh')">Weight loss: Target must be less than current weight.</mat-error>
+              <mat-error *ngIf="goalForm.get('targetWeight')?.hasError('targetWeightTooLow')">Muscle gain: Target must be greater than current weight.</mat-error>
             </mat-form-field>
           </div>
 
@@ -113,7 +115,40 @@ export class HealthGoalComponent implements OnInit {
       height: [null, [Validators.required, Validators.min(50), Validators.max(300)]],
       currentWeight: [null, [Validators.required, Validators.min(20), Validators.max(300)]],
       targetWeight: [null, [Validators.min(20), Validators.max(300)]]
-    });
+    }, { validators: this.weightGoalValidator });
+  }
+
+  weightGoalValidator(group: FormGroup): { [key: string]: any } | null {
+    const goalType = group.get('goalType')?.value;
+    const currentWeight = group.get('currentWeight')?.value;
+    const targetWeightControl = group.get('targetWeight');
+    const targetWeight = targetWeightControl?.value;
+
+    if (!goalType || !currentWeight || !targetWeight) {
+      if (targetWeightControl?.hasError('targetWeightTooHigh') || targetWeightControl?.hasError('targetWeightTooLow')) {
+        const { targetWeightTooHigh, targetWeightTooLow, ...otherErrors } = targetWeightControl.errors || {};
+        targetWeightControl.setErrors(Object.keys(otherErrors).length ? otherErrors : null);
+      }
+      return null;
+    }
+
+    if (goalType === 'WEIGHT_LOSS' && targetWeight >= currentWeight) {
+      targetWeightControl.setErrors({ ...targetWeightControl.errors, targetWeightTooHigh: true });
+      return { targetWeightTooHigh: true };
+    }
+    
+    if (goalType === 'MUSCLE_GAIN' && targetWeight <= currentWeight) {
+      targetWeightControl.setErrors({ ...targetWeightControl.errors, targetWeightTooLow: true });
+      return { targetWeightTooLow: true };
+    }
+
+    // Clear custom errors if valid
+    if (targetWeightControl?.hasError('targetWeightTooHigh') || targetWeightControl?.hasError('targetWeightTooLow')) {
+      const { targetWeightTooHigh, targetWeightTooLow, ...otherErrors } = targetWeightControl.errors || {};
+      targetWeightControl.setErrors(Object.keys(otherErrors).length ? otherErrors : null);
+    }
+
+    return null;
   }
 
   ngOnInit() {
@@ -130,7 +165,10 @@ export class HealthGoalComponent implements OnInit {
         this.saved = true;
         this.snackBar.open('Health goal saved!', 'OK', { duration: 3000, panelClass: 'snack-success' });
       },
-      error: () => this.snackBar.open('Error saving goal', 'OK', { duration: 3000, panelClass: 'snack-error' })
+      error: (err) => {
+        const errorMsg = typeof err.error === 'string' ? err.error : 'Error saving goal';
+        this.snackBar.open(errorMsg, 'OK', { duration: 4000, panelClass: 'snack-error' });
+      }
     });
   }
 }

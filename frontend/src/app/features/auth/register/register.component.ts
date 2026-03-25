@@ -20,7 +20,7 @@ import { AuthService } from '../../../core/services/auth.service';
           <label class="field-label" for="fullName">Full Name</label>
           <input id="fullName" class="field-input" type="text"
                  formControlName="fullName" placeholder="Your full name">
-          <div class="field-error" *ngIf="registerForm.get('fullName')?.invalid && registerForm.get('fullName')?.touched">
+          <div class="field-error" *ngIf="registerForm.get('fullName')?.invalid && (registerForm.get('fullName')?.touched || registerForm.get('fullName')?.dirty)">
             <span *ngIf="registerForm.get('fullName')?.errors?.['required']">Full name is required</span>
             <span *ngIf="registerForm.get('fullName')?.errors?.['pattern']">Letters and spaces only (2-50 chars)</span>
           </div>
@@ -30,9 +30,10 @@ import { AuthService } from '../../../core/services/auth.service';
           <label class="field-label" for="email">Email</label>
           <input id="email" class="field-input" type="email"
                  formControlName="email" placeholder="you@company.com">
-          <div class="field-error" *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
+          <div class="field-error" *ngIf="registerForm.get('email')?.invalid && (registerForm.get('email')?.touched || registerForm.get('email')?.dirty)">
             <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required</span>
-            <span *ngIf="registerForm.get('email')?.errors?.['email']">Must be a valid email</span>
+            <span *ngIf="registerForm.get('email')?.errors?.['email']">Missing '&#64;' or invalid format</span>
+            <span *ngIf="registerForm.get('email')?.errors?.['pattern']">Missing domain (e.g., .com, .org)</span>
           </div>
         </div>
 
@@ -40,9 +41,9 @@ import { AuthService } from '../../../core/services/auth.service';
           <label class="field-label" for="reg-username">Username</label>
           <input id="reg-username" class="field-input" type="text"
                  formControlName="username" placeholder="Choose a username">
-          <div class="field-error" *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched">
+          <div class="field-error" *ngIf="registerForm.get('username')?.invalid && (registerForm.get('username')?.touched || registerForm.get('username')?.dirty)">
             <span *ngIf="registerForm.get('username')?.errors?.['required']">Username is required</span>
-            <span *ngIf="registerForm.get('username')?.errors?.['pattern']">Alphanumeric & underscores (3-20 chars)</span>
+            <span *ngIf="registerForm.get('username')?.errors?.['pattern']">Use only letters, numbers, underscores (3-20 chars)</span>
           </div>
         </div>
 
@@ -50,9 +51,9 @@ import { AuthService } from '../../../core/services/auth.service';
           <label class="field-label" for="reg-password">Password</label>
           <input id="reg-password" class="field-input" type="password"
                  formControlName="password" placeholder="Min 8 chars, 1 uppercase, 1 special">
-          <div class="field-error" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+          <div class="field-error" *ngIf="registerForm.get('password')?.invalid && (registerForm.get('password')?.touched || registerForm.get('password')?.dirty)">
             <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required</span>
-            <span *ngIf="registerForm.get('password')?.errors?.['pattern']">Must be 8-50 chars, with upper, lower, digit & special char (&#64;#$%^&+=!)</span>
+            <span *ngIf="registerForm.get('password')?.errors?.['pattern']">Require: 8+ chars, 1 uppercase, 1 lowercase, 1 digit, 1 special (&#64;#$%^&+=!)</span>
           </div>
         </div>
 
@@ -161,7 +162,7 @@ export class RegisterComponent {
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.registerForm = this.fb.group({
       fullName: ['', [Validators.required, Validators.pattern(/^[a-zA-Z\s]{2,50}$/)]],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/)]],
       username: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9_]{3,20}$/)]],
       password: ['', [Validators.required, Validators.pattern(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,50}$/)]],
     });
