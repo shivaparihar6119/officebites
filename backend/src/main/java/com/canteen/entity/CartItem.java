@@ -2,12 +2,11 @@ package com.canteen.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "canteen_orders")
+@Table(name = "cart_items")
 @Data
-public class Order {
+public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,18 +19,6 @@ public class Order {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "food_item_id", nullable = false)
     private FoodItem foodItem;
-
-    @Column(nullable = false)
-    private LocalDateTime orderDate;
-
-    private LocalDateTime deliveryDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OrderStatus status = OrderStatus.PENDING;
-
-    @Column(nullable = false, length = 10)
-    private String oneTimeCode;
 
     @Column(nullable = false)
     private Integer quantity = 1;

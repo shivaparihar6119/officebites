@@ -36,6 +36,7 @@ import { MatIconModule } from '@angular/material/icon';
         <ng-container *ngIf="role === 'EMPLOYEE'">
           <a routerLink="/employee/dashboard" class="nav-link">Dashboard</a>
           <a routerLink="/employee/menu" class="nav-link">Menu</a>
+          <a routerLink="/employee/cart" class="nav-link">Cart 🛒</a>
           <a routerLink="/employee/orders" class="nav-link">My Orders</a>
           <a routerLink="/employee/recommendations" class="nav-link">For Me</a>
           <a routerLink="/employee/health-goal" class="nav-link">Health Goal</a>

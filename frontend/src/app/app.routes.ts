@@ -52,6 +52,7 @@ export const routes: Routes = [
       { path: 'health-goal', loadComponent: () => import('./features/employee/health-goal/health-goal.component').then(m => m.HealthGoalComponent) },
       { path: 'recommendations', loadComponent: () => import('./features/employee/recommendations/recommendations.component').then(m => m.RecommendationsComponent) },
       { path: 'menu', loadComponent: () => import('./features/employee/menu/menu.component').then(m => m.MenuComponent) },
+      { path: 'cart', loadComponent: () => import('./features/employee/cart/cart.component').then(m => m.CartComponent) },
       { path: 'orders', loadComponent: () => import('./features/employee/orders/employee-orders.component').then(m => m.EmployeeOrdersComponent) },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]

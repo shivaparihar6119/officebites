@@ -5,7 +5,9 @@ import lombok.Data;
 import jakarta.validation.constraints.Pattern;
 
 @Entity
-@Table(name = "food_items")
+@Table(name = "food_items", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"name", "vendor_id"})
+})
 @Data
 public class FoodItem {
 

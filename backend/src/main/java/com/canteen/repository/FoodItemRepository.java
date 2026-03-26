@@ -9,4 +9,6 @@ import java.util.List;
 @Repository
 public interface FoodItemRepository extends JpaRepository<FoodItem, Long> {
     List<FoodItem> findByVendorId(Long vendorId);
+    boolean existsByNameIgnoreCaseAndVendorId(String name, Long vendorId);
+    boolean existsByNameIgnoreCaseAndVendorIdAndIdNot(String name, Long vendorId, Long id);
 }

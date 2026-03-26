@@ -32,7 +32,13 @@ public class VendorController {
         if (vendorOpt.isEmpty() || vendorOpt.get().getRole() != Role.VENDOR) {
             return ResponseEntity.status(403).body("Access denied");
         }
-        foodItem.setVendor(vendorOpt.get());
+        User vendor = vendorOpt.get();
+        
+        if (foodItemRepository.existsByNameIgnoreCaseAndVendorId(foodItem.getName(), vendor.getId())) {
+            return ResponseEntity.badRequest().body("Food item with this name already exists in your menu.");
+        }
+
+        foodItem.setVendor(vendor);
         FoodItem savedItem = foodItemRepository.save(foodItem);
         return ResponseEntity.ok(savedItem);
     }
@@ -51,13 +57,18 @@ public class VendorController {
                                              @Valid @RequestBody FoodItem updated) {
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
         if (vendorOpt.isEmpty()) return ResponseEntity.status(403).build();
+        User vendor = vendorOpt.get();
 
         Optional<FoodItem> itemOpt = foodItemRepository.findById(id);
         if (itemOpt.isEmpty()) return ResponseEntity.notFound().build();
 
         FoodItem item = itemOpt.get();
-        if (!item.getVendor().getId().equals(vendorOpt.get().getId())) {
+        if (!item.getVendor().getId().equals(vendor.getId())) {
             return ResponseEntity.status(403).body("Not your food item");
+        }
+
+        if (foodItemRepository.existsByNameIgnoreCaseAndVendorIdAndIdNot(updated.getName(), vendor.getId(), id)) {
+            return ResponseEntity.badRequest().body("Another food item with this name already exists in your menu.");
         }
 
         item.setName(updated.getName());

@@ -7,9 +7,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { EmployeeService } from '../../../core/services/employee.service';
+import { CartService } from '../../../core/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { FoodItem } from '../../../core/models/models';
 import { forkJoin } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-menu',
@@ -22,6 +24,11 @@ import { forkJoin } from 'rxjs';
         <p *ngIf="!selectedVendor">Select a vendor to view their delicious offerings</p>
         <p *ngIf="selectedVendor">Viewing menu for {{ selectedVendor.fullName || selectedVendor.username }}</p>
       </div>
+
+      <!-- Floating Cart Button -->
+      <button mat-fab color="accent" class="cart-fab" (click)="goToCart()">
+        <mat-icon>shopping_cart</mat-icon>
+      </button>
 
       <!-- Vendor List View -->
       <div *ngIf="!selectedVendor">
@@ -68,9 +75,21 @@ import { forkJoin } from 'rxjs';
                 <div class="nutrition-item"><div class="n-value">{{ item.carbohydrates }}g</div><div class="n-label">Carbs</div></div>
                 <div class="nutrition-item"><div class="n-value">{{ item.fats }}g</div><div class="n-label">Fats</div></div>
               </div>
-              <button mat-raised-button color="primary" style="margin-top: 16px; width: 100%" (click)="placeOrder(item)">
-                Order Now
-              </button>
+              
+              <div class="cart-controls" style="margin-top: 16px;">
+                <button *ngIf="!getQuantity(item.id!)" mat-raised-button color="primary" style="width: 100%" (click)="addToCart(item)">
+                  <mat-icon style="margin-right: 8px">add_shopping_cart</mat-icon> Add to Cart
+                </button>
+                <div *ngIf="getQuantity(item.id!)" class="qty-control-row">
+                  <button mat-icon-button (click)="updateQuantity(item, getQuantity(item.id!) - 1)">
+                    <mat-icon>remove_circle_outline</mat-icon>
+                  </button>
+                  <span class="qty">{{ getQuantity(item.id!) }}</span>
+                  <button mat-icon-button (click)="updateQuantity(item, getQuantity(item.id!) + 1)">
+                    <mat-icon>add_circle_outline</mat-icon>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -89,9 +108,21 @@ import { forkJoin } from 'rxjs';
                 <div class="nutrition-item"><div class="n-value">{{ item.carbohydrates }}g</div><div class="n-label">Carbs</div></div>
                 <div class="nutrition-item"><div class="n-value">{{ item.fats }}g</div><div class="n-label">Fats</div></div>
               </div>
-              <button mat-raised-button color="primary" style="margin-top: 16px; width: 100%" (click)="placeOrder(item)">
-                Order Now
-              </button>
+
+              <div class="cart-controls" style="margin-top: 16px;">
+                <button *ngIf="!getQuantity(item.id!)" mat-raised-button color="primary" style="width: 100%" (click)="addToCart(item)">
+                  <mat-icon style="margin-right: 8px">add_shopping_cart</mat-icon> Add to Cart
+                </button>
+                <div *ngIf="getQuantity(item.id!)" class="qty-control-row">
+                  <button mat-icon-button (click)="updateQuantity(item, getQuantity(item.id!) - 1)">
+                    <mat-icon>remove_circle_outline</mat-icon>
+                  </button>
+                  <span class="qty">{{ getQuantity(item.id!) }}</span>
+                  <button mat-icon-button (click)="updateQuantity(item, getQuantity(item.id!) + 1)">
+                    <mat-icon>add_circle_outline</mat-icon>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -130,11 +161,20 @@ import { forkJoin } from 'rxjs';
       box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     .empty { text-align: center; padding: 80px 0; }
+    .cart-fab { position: fixed; bottom: 32px; right: 32px; z-index: 100; box-shadow: 0 8px 32px rgba(99,102,241,0.5); }
+    
+    .qty-control-row {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #0f172a; border-radius: 12px; padding: 4px 8px; 
+      border: 1px solid rgba(99,102,241,0.3);
+    }
+    .qty { font-weight: 700; color: #818cf8; font-size: 16px; }
   `]
 })
 export class MenuComponent implements OnInit {
   allItems: FoodItem[] = [];
   recommendedItemIds: Set<number> = new Set();
+  cartQuantities: Map<number, number> = new Map();
   
   vendors: any[] = [];
   filteredVendors: any[] = [];
@@ -151,11 +191,15 @@ export class MenuComponent implements OnInit {
 
   constructor(
     private employeeService: EmployeeService, 
+    private cartService: CartService,
     private auth: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit() {
+    this.refreshCart();
+    
     forkJoin({
       allItems: this.employeeService.getAllActiveFoodItems(),
       recommendedItems: this.employeeService.getRecommendations()
@@ -181,6 +225,27 @@ export class MenuComponent implements OnInit {
         this.snackBar.open('Error loading menu data.', 'OK', { duration: 3000, panelClass: 'snack-error' });
       }
     });
+  }
+
+  refreshCart() {
+    this.cartService.getCart().subscribe({
+      next: (items) => {
+        this.cartQuantities.clear();
+        items.forEach(i => this.cartQuantities.set(i.foodItem.id!, i.quantity));
+      }
+    });
+  }
+
+  getQuantity(itemId: number): number {
+    return this.cartQuantities.get(itemId) || 0;
+  }
+
+  updateQuantity(item: FoodItem, quantity: number) {
+    if (quantity <= 0) {
+      this.cartService.removeFromCart(item.id!).subscribe(() => this.refreshCart());
+    } else {
+      this.cartService.updateQuantity(item.id!, quantity).subscribe(() => this.refreshCart());
+    }
   }
 
   filterVendors() {
@@ -221,17 +286,20 @@ export class MenuComponent implements OnInit {
     );
   }
 
-  placeOrder(item: FoodItem) {
-    const user = this.auth.currentUser;
-    if (!user || user.role !== 'EMPLOYEE') return;
-    
-    this.employeeService.placeOrder(user.userId, item.id!).subscribe({
-      next: (order) => {
-        this.snackBar.open(`Successfully ordered ${item.name}! Your One Time Code is: ${order.oneTimeCode}`, 'Close', { duration: 10000 });
+  addToCart(item: FoodItem) {
+    this.cartService.addToCart(item.id!).subscribe({
+      next: () => {
+        this.refreshCart();
+        this.snackBar.open(`${item.name} added to cart!`, 'View Cart', { duration: 4000 })
+          .onAction().subscribe(() => this.router.navigate(['/employee/cart']));
       },
       error: () => {
-        this.snackBar.open('Error placing order.', 'OK', { duration: 3000, panelClass: 'snack-error' });
+        this.snackBar.open('Error adding to cart.', 'OK', { duration: 3000, panelClass: 'snack-error' });
       }
     });
+  }
+
+  goToCart() {
+    this.router.navigate(['/employee/cart']);
   }
 }
