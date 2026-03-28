@@ -35,4 +35,7 @@ public class Order {
 
     @Column(nullable = false)
     private Integer quantity = 1;
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private FoodRating rating;
 }

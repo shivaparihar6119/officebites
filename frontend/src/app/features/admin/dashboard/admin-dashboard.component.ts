@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormGroupDirective } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -110,6 +110,7 @@ import { AdminStats } from '../../../core/models/models';
 export class AdminDashboardComponent implements OnInit {
   stats: AdminStats | null = null;
   vendorForm: FormGroup;
+  @ViewChild(FormGroupDirective) formDirective!: FormGroupDirective;
 
   constructor(private adminService: AdminService, private fb: FormBuilder, private snackBar: MatSnackBar) {
     this.vendorForm = this.fb.group({
@@ -129,6 +130,7 @@ export class AdminDashboardComponent implements OnInit {
     this.adminService.createVendor(this.vendorForm.value).subscribe({
       next: () => {
         this.snackBar.open('Vendor created successfully!', 'OK', { duration: 3000, panelClass: 'snack-success' });
+        if (this.formDirective) this.formDirective.resetForm();
         this.vendorForm.reset();
         this.adminService.getStats().subscribe(s => this.stats = s);
       },

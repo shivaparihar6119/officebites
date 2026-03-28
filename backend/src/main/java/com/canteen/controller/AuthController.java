@@ -58,7 +58,12 @@ public class AuthController {
 
         if (userRepository.findByUsername(username).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Username already exists"));
+                    .body(Map.of("error", "Username has already been taken."));
+        }
+
+        if (userRepository.findAll().stream().anyMatch(u -> u.getEmail().equalsIgnoreCase(email))) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "Email is already registered."));
         }
 
         User user = new User();

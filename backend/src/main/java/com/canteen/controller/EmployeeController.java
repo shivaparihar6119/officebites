@@ -1,14 +1,16 @@
 package com.canteen.controller;
 
+import com.canteen.dto.RatingRequest;
+
 import com.canteen.entity.FoodItem;
 import com.canteen.entity.GoalType;
 import com.canteen.entity.Gender;
 import com.canteen.entity.HealthGoal;
 import com.canteen.entity.Role;
 import com.canteen.entity.User;
-import com.canteen.repository.FoodItemRepository;
 import com.canteen.repository.HealthGoalRepository;
 import com.canteen.repository.UserRepository;
+import com.canteen.service.FoodRatingService;
 import com.canteen.service.RecommendationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,7 @@ public class EmployeeController {
     private final HealthGoalRepository healthGoalRepository;
     private final RecommendationService recommendationService;
     private final UserRepository userRepository;
-    private final FoodItemRepository foodItemRepository;
+    private final FoodRatingService foodRatingService;
 
     @PostMapping("/health-goal")
     public ResponseEntity<?> setHealthGoal(Authentication auth, @Valid @RequestBody HealthGoal healthGoal) {
@@ -118,5 +120,23 @@ public class EmployeeController {
             "email", user.getEmail() != null ? user.getEmail() : "",
             "role", user.getRole().name()
         ));
+    }
+
+    @PostMapping("/rate")
+    public ResponseEntity<?> rateFoodItem(Authentication auth, @Valid @RequestBody RatingRequest request) {
+        Optional<User> userOpt = userRepository.findByUsername(auth.getName());
+        if (userOpt.isEmpty()) return ResponseEntity.status(401).build();
+        
+        try {
+            return ResponseEntity.ok(foodRatingService.rateItem(
+                userOpt.get(), 
+                request.getFoodItemId(), 
+                request.getOrderId(),
+                request.getRating(), 
+                request.getComment()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

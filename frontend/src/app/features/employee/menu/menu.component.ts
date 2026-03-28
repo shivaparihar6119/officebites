@@ -67,6 +67,10 @@ import { Router } from '@angular/router';
             <div class="food-card recommended-card" *ngFor="let item of filteredRecommendedItems">
               <div class="recommended-badge">Recommended</div>
               <div class="food-name">{{ item.name }}</div>
+              <div class="rating-badge" *ngIf="item.averageRating && item.averageRating > 0">
+                <mat-icon>star</mat-icon>
+                <span>{{ item.averageRating | number:'1.1-1' }}</span>
+              </div>
               <div class="food-description">{{ item.description }}</div>
               <div class="food-price">₹{{ item.price }}</div>
               <div class="nutrition-grid">
@@ -100,6 +104,10 @@ import { Router } from '@angular/router';
           <div class="food-grid">
             <div class="food-card" *ngFor="let item of filteredOtherItems">
               <div class="food-name">{{ item.name }}</div>
+              <div class="rating-badge" *ngIf="item.averageRating && item.averageRating > 0">
+                <mat-icon>star</mat-icon>
+                <span>{{ item.averageRating | number:'1.1-1' }}</span>
+              </div>
               <div class="food-description">{{ item.description }}</div>
               <div class="food-price">₹{{ item.price }}</div>
               <div class="nutrition-grid">
@@ -169,6 +177,9 @@ import { Router } from '@angular/router';
       border: 1px solid rgba(99,102,241,0.3);
     }
     .qty { font-weight: 700; color: #818cf8; font-size: 16px; }
+    .rating-badge { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+    .rating-badge mat-icon { font-size: 16px; width: 16px; height: 16px; color: #facc15; }
+    .rating-badge span { font-size: 13px; font-weight: 600; color: #facc15; }
   `]
 })
 export class MenuComponent implements OnInit {

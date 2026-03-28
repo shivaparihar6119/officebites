@@ -75,6 +75,7 @@ export interface Order {
   deliveryDate?: string;
   status: OrderStatus;
   oneTimeCode: string;
+  rating?: { id: number; rating: number; comment?: string };
 }
 
 export interface StreakData {

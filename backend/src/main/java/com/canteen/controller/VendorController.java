@@ -6,9 +6,11 @@ import com.canteen.entity.OrderStatus;
 import com.canteen.entity.Role;
 import com.canteen.entity.User;
 import com.canteen.repository.FoodItemRepository;
+import com.canteen.repository.FoodRatingRepository;
 import com.canteen.repository.OrderRepository;
 import com.canteen.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -25,15 +27,22 @@ public class VendorController {
     private final FoodItemRepository foodItemRepository;
     private final UserRepository userRepository;
     private final OrderRepository orderRepository;
+    private final FoodRatingRepository foodRatingRepository;
 
     @PostMapping("/food-items")
     public ResponseEntity<?> addFoodItem(Authentication auth, @Valid @RequestBody FoodItem foodItem) {
+        System.out.println("Adding food item. Principal: " + auth.getName());
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
-        if (vendorOpt.isEmpty() || vendorOpt.get().getRole() != Role.VENDOR) {
-            return ResponseEntity.status(403).body("Access denied");
+        if (vendorOpt.isEmpty()) {
+            System.out.println("Vendor not found for username: " + auth.getName());
+            return ResponseEntity.status(403).body("Access denied: User not found");
+        }
+        if (vendorOpt.get().getRole() != Role.VENDOR) {
+            System.out.println("User is not a vendor: " + vendorOpt.get().getRole());
+            return ResponseEntity.status(403).body("Access denied: Not a vendor");
         }
         User vendor = vendorOpt.get();
-        
+
         if (foodItemRepository.existsByNameIgnoreCaseAndVendorId(foodItem.getName(), vendor.getId())) {
             return ResponseEntity.badRequest().body("Food item with this name already exists in your menu.");
         }
@@ -44,23 +53,29 @@ public class VendorController {
     }
 
     @GetMapping("/food-items")
-    public ResponseEntity<List<FoodItem>> getMyFoodItems(Authentication auth) {
+    public ResponseEntity<?> getMyFoodItems(Authentication auth) {
+        System.out.println("Getting food items. Principal: " + auth.getName());
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
-        if (vendorOpt.isEmpty()) return ResponseEntity.status(403).build();
+        if (vendorOpt.isEmpty()) {
+            System.out.println("Vendor not found for username: " + auth.getName());
+            return ResponseEntity.status(403).body("Access denied: Vendor not found");
+        }
         List<FoodItem> items = foodItemRepository.findByVendorId(vendorOpt.get().getId());
         return ResponseEntity.ok(items);
     }
 
     @PutMapping("/food-items/{id}")
     public ResponseEntity<?> updateFoodItem(Authentication auth,
-                                             @PathVariable Long id,
-                                             @Valid @RequestBody FoodItem updated) {
+            @PathVariable Long id,
+            @Valid @RequestBody FoodItem updated) {
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
-        if (vendorOpt.isEmpty()) return ResponseEntity.status(403).build();
+        if (vendorOpt.isEmpty())
+            return ResponseEntity.status(403).build();
         User vendor = vendorOpt.get();
 
         Optional<FoodItem> itemOpt = foodItemRepository.findById(id);
-        if (itemOpt.isEmpty()) return ResponseEntity.notFound().build();
+        if (itemOpt.isEmpty())
+            return ResponseEntity.notFound().build();
 
         FoodItem item = itemOpt.get();
         if (!item.getVendor().getId().equals(vendor.getId())) {
@@ -85,12 +100,28 @@ public class VendorController {
     @DeleteMapping("/food-items/{id}")
     public ResponseEntity<?> deleteFoodItem(Authentication auth, @PathVariable Long id) {
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
-        if (vendorOpt.isEmpty()) return ResponseEntity.status(403).build();
+        if (vendorOpt.isEmpty())
+            return ResponseEntity.status(403).build();
+
         Optional<FoodItem> itemOpt = foodItemRepository.findById(id);
-        if (itemOpt.isEmpty()) return ResponseEntity.notFound().build();
-        if (!itemOpt.get().getVendor().getId().equals(vendorOpt.get().getId())) {
+        if (itemOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        FoodItem item = itemOpt.get();
+        if (!item.getVendor().getId().equals(vendorOpt.get().getId())) {
             return ResponseEntity.status(403).body("Not your food item");
         }
+
+        // Check for dependencies
+        if (orderRepository.existsByFoodItemId(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("This item cannot be deleted because it has existing orders. Please hide it (set to inactive) instead to preserve order history.");
+        }
+        if (foodRatingRepository.existsByFoodItemId(id)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("This item cannot be deleted because it has ratings and reviews. Please hide it instead.");
+        }
+
         foodItemRepository.deleteById(id);
         return ResponseEntity.ok().build();
     }
@@ -98,8 +129,9 @@ public class VendorController {
     @GetMapping("/orders/pending")
     public ResponseEntity<List<Order>> getPendingOrders(Authentication auth) {
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
-        if (vendorOpt.isEmpty()) return ResponseEntity.status(403).build();
-        
+        if (vendorOpt.isEmpty())
+            return ResponseEntity.status(403).build();
+
         List<Order> pendingOrders = orderRepository.findByFoodItemVendorIdAndStatusOrderByOrderDateDesc(
                 vendorOpt.get().getId(), OrderStatus.PENDING);
         return ResponseEntity.ok(pendingOrders);
@@ -108,7 +140,8 @@ public class VendorController {
     @PostMapping("/orders/deliver/{otc}")
     public ResponseEntity<?> deliverOrder(Authentication auth, @PathVariable String otc) {
         Optional<User> vendorOpt = userRepository.findByUsername(auth.getName());
-        if (vendorOpt.isEmpty()) return ResponseEntity.status(403).build();
+        if (vendorOpt.isEmpty())
+            return ResponseEntity.status(403).build();
 
         Optional<Order> orderOpt = orderRepository.findByOneTimeCodeAndStatus(otc, OrderStatus.PENDING);
         if (orderOpt.isEmpty()) {

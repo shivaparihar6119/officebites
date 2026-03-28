@@ -34,24 +34,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                // Public endpoints
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                // Admin only
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                // Vendor only
-                .requestMatchers("/api/vendor/**").hasRole("VENDOR")
-                // Employee only
-                .requestMatchers("/api/employee/**").hasRole("EMPLOYEE")
-                // Authenticated users
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
+                        // Admin only
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        // Vendor only
+                        .requestMatchers("/api/vendor/**").hasRole("VENDOR")
+                        // Employee only
+                        .requestMatchers("/api/employee/**").hasRole("EMPLOYEE")
+                        // Authenticated users
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

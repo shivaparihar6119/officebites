@@ -37,4 +37,8 @@ export class EmployeeService {
   getMyStreak(employeeId: number): Observable<{ streak: number }> {
     return this.http.get<{ streak: number }>(`${this.base}/${employeeId}/streak`);
   }
+
+  rateFoodItem(data: { foodItemId: number; orderId: number; rating: number; comment?: string }): Observable<any> {
+    return this.http.post(`${this.base}/rate`, data);
+  }
 }

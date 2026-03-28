@@ -18,4 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     
     // For streak calculation
     List<Order> findByEmployeeIdAndStatusAndDeliveryDateBetween(Long employeeId, OrderStatus status, LocalDateTime start, LocalDateTime end);
+
+    boolean existsByFoodItemId(Long foodItemId);
 }

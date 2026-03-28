@@ -50,7 +50,17 @@ public class AdminController {
 
         if (userRepository.findByUsername(username).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", "Username already exists"));
+                    .body(Map.of("error", "Username has already been taken by another user."));
+        }
+
+        if (userRepository.findAll().stream().anyMatch(u -> u.getEmail().equalsIgnoreCase(email))) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "A vendor with this email address is already registered."));
+        }
+
+        if (userRepository.findAll().stream().anyMatch(u -> u.getRole() == Role.VENDOR && u.getFullName().equalsIgnoreCase(fullName))) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", "A vendor with this business name already exists."));
         }
 
         User vendor = new User();

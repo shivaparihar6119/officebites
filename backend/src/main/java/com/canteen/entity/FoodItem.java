@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 
 @Entity
 @Table(name = "food_items", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"name", "vendor_id"})
+        @UniqueConstraint(columnNames = { "name", "vendor_id" })
 })
 @Data
 public class FoodItem {
@@ -17,7 +17,7 @@ public class FoodItem {
 
     @jakarta.validation.constraints.NotBlank(message = "Food name is required")
     @jakarta.validation.constraints.Size(min = 3, max = 100, message = "Food name must be between 3 and 100 characters")
-    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-_,&()]+$", message = "Food name can only contain letters, numbers, spaces, and basic punctuation (- _, & ())")
+    @Pattern(regexp = "^[a-zA-Z0-9\\s\\-_,&().'/]+$", message = "Food name can only contain letters, numbers, spaces, and basic punctuation (- _, & () . ' /)")
     @Column(nullable = false)
     private String name;
 
