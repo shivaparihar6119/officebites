@@ -44,8 +44,8 @@ import { Order, StreakData } from '../../../core/models/models';
             <p *ngIf="order.deliveryDate"><strong>Delivered:</strong> {{ order.deliveryDate | date:'medium' }}</p>
             <p *ngIf="order.status === 'PENDING'"><strong>One Time Code:</strong> <span class="otc-text">{{ order.oneTimeCode }}</span></p>
             <div class="nutrition-summary">
-              <span>{{ order.foodItem.calories }} kcal</span> • 
-              <span>{{ order.foodItem.protein }}g protein</span>
+              <span>{{ order.foodItem.calories | number:'1.0-2' }} kcal</span> • 
+              <span>{{ order.foodItem.protein | number:'1.0-2' }}g protein</span>
             </div>
           </div>
           <div class="vendor-info">

@@ -102,10 +102,10 @@ import { FoodItem } from '../../../core/models/models';
           </div>
           <div class="food-price">₹{{ item.price }}</div>
           <div class="nutrition-grid">
-            <div class="nutrition-item"><div class="n-value">{{ item.calories }}</div><div class="n-label">Cal</div></div>
-            <div class="nutrition-item"><div class="n-value">{{ item.protein }}g</div><div class="n-label">Protein</div></div>
-            <div class="nutrition-item"><div class="n-value">{{ item.carbohydrates }}g</div><div class="n-label">Carbs</div></div>
-            <div class="nutrition-item"><div class="n-value">{{ item.fats }}g</div><div class="n-label">Fats</div></div>
+            <div class="nutrition-item"><div class="n-value">{{ item.calories | number:'1.0-2' }}</div><div class="n-label">Cal</div></div>
+            <div class="nutrition-item"><div class="n-value">{{ item.protein | number:'1.0-2' }}g</div><div class="n-label">Protein</div></div>
+            <div class="nutrition-item"><div class="n-value">{{ item.carbohydrates | number:'1.0-2' }}g</div><div class="n-label">Carbs</div></div>
+            <div class="nutrition-item"><div class="n-value">{{ item.fats | number:'1.0-2' }}g</div><div class="n-label">Fats</div></div>
           </div>
           <div class="card-actions">
             <button mat-icon-button (click)="edit(item)" title="Edit"><mat-icon>edit</mat-icon></button>

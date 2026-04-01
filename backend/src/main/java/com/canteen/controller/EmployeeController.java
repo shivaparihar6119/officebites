@@ -80,13 +80,16 @@ public class EmployeeController {
         // Adjust based on goal
         if (goal.getGoalType() == GoalType.WEIGHT_LOSS) {
             goal.setTargetDailyCalories((int) (tdee - 500));
-            goal.setTargetDailyProtein(goal.getCurrentWeight() != null ? goal.getCurrentWeight() * 2.0 : 100.0);
+            double protein = goal.getCurrentWeight() != null ? goal.getCurrentWeight() * 2.0 : 100.0;
+            goal.setTargetDailyProtein(Math.round(protein * 100.0) / 100.0);
         } else if (goal.getGoalType() == GoalType.MUSCLE_GAIN) {
             goal.setTargetDailyCalories((int) (tdee + 500));
-            goal.setTargetDailyProtein(goal.getCurrentWeight() != null ? goal.getCurrentWeight() * 2.2 : 150.0);
+            double protein = goal.getCurrentWeight() != null ? goal.getCurrentWeight() * 2.2 : 150.0;
+            goal.setTargetDailyProtein(Math.round(protein * 100.0) / 100.0);
         } else {
             goal.setTargetDailyCalories((int) tdee);
-            goal.setTargetDailyProtein(goal.getCurrentWeight() != null ? goal.getCurrentWeight() * 1.6 : 120.0);
+            double protein = goal.getCurrentWeight() != null ? goal.getCurrentWeight() * 1.6 : 120.0;
+            goal.setTargetDailyProtein(Math.round(protein * 100.0) / 100.0);
         }
 
         return ResponseEntity.ok(healthGoalRepository.save(goal));

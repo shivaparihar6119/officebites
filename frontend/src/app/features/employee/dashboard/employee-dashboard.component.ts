@@ -34,7 +34,7 @@ import { HealthGoal } from '../../../core/models/models';
             </div>
             <div class="detail-item" *ngIf="healthGoal.targetDailyProtein">
               <span class="d-label">Daily Protein</span>
-              <span class="d-value">{{ healthGoal.targetDailyProtein }}g</span>
+              <span class="d-value">{{ healthGoal.targetDailyProtein | number:'1.0-2' }}g</span>
             </div>
             <div class="detail-item" *ngIf="healthGoal.currentWeight">
               <span class="d-label">Current Weight</span>
